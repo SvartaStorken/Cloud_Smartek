@@ -1,0 +1,108 @@
+2025-06-02 00:09:00,326 p=31380 u=MajaBaja n=ansible INFO| PLAY [Update Ubuntu Server and Install Nginx with Stream Proxies] **************************************************************************************************************************************************
+2025-06-02 00:09:00,336 p=31380 u=MajaBaja n=ansible INFO| TASK [Gathering Facts] *********************************************************************************************************************************************************************************************
+2025-06-02 00:09:05,393 p=31380 u=MajaBaja n=ansible WARNING| [WARNING]: Platform linux on host nginx_vm is using the discovered Python interpreter at /usr/bin/python3.12, but future installation of another Python interpreter could change the meaning of that path. See
+https://docs.ansible.com/ansible-core/2.18/reference_appendices/interpreter_discovery.html for more information.
+
+2025-06-02 00:09:05,394 p=31380 u=MajaBaja n=ansible INFO| ok: [nginx_vm]
+2025-06-02 00:09:05,401 p=31380 u=MajaBaja n=ansible INFO| TASK [Update apt repo and cache] ***********************************************************************************************************************************************************************************
+2025-06-02 00:09:24,814 p=31380 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 00:09:24,839 p=31380 u=MajaBaja n=ansible INFO| TASK [Upgrade all apt packages to the latest version] **************************************************************************************************************************************************************
+2025-06-02 00:09:27,776 p=31380 u=MajaBaja n=ansible INFO| ok: [nginx_vm]
+2025-06-02 00:09:27,799 p=31380 u=MajaBaja n=ansible INFO| TASK [Display packages that were upgraded] *************************************************************************************************************************************************************************
+2025-06-02 00:09:27,823 p=31380 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 00:09:27,829 p=31380 u=MajaBaja n=ansible INFO| TASK [Remove unused dependencies] **********************************************************************************************************************************************************************************
+2025-06-02 00:09:30,444 p=31380 u=MajaBaja n=ansible INFO| ok: [nginx_vm]
+2025-06-02 00:09:30,462 p=31380 u=MajaBaja n=ansible INFO| TASK [Install Nginx] ***********************************************************************************************************************************************************************************************
+2025-06-02 00:09:44,772 p=31380 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 00:09:44,802 p=31380 u=MajaBaja n=ansible INFO| TASK [Ensure Nginx service is started and enabled] *****************************************************************************************************************************************************************
+2025-06-02 00:09:47,746 p=31380 u=MajaBaja n=ansible INFO| ok: [nginx_vm]
+2025-06-02 00:09:47,765 p=31380 u=MajaBaja n=ansible INFO| TASK [Ensure stream block is present in nginx.conf and includes streams-enabled] ***********************************************************************************************************************************
+2025-06-02 00:09:49,712 p=31380 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 00:09:49,735 p=31380 u=MajaBaja n=ansible INFO| TASK [Create Nginx stream configuration directories] ***************************************************************************************************************************************************************
+2025-06-02 00:09:51,625 p=31380 u=MajaBaja n=ansible INFO| changed: [nginx_vm] => (item=/etc/nginx/streams-available)
+2025-06-02 00:09:53,494 p=31380 u=MajaBaja n=ansible INFO| changed: [nginx_vm] => (item=/etc/nginx/streams-enabled)
+2025-06-02 00:09:53,518 p=31380 u=MajaBaja n=ansible INFO| TASK [Create Nginx stream config for TCP forwards (SSH and MariaDB)] ***********************************************************************************************************************************************
+2025-06-02 00:09:57,877 p=31380 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 00:09:57,906 p=31380 u=MajaBaja n=ansible INFO| TASK [Create Nginx stream config for TCP forwards (SSH and Wordpress)] *********************************************************************************************************************************************
+2025-06-02 00:10:01,964 p=31380 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 00:10:01,991 p=31380 u=MajaBaja n=ansible INFO| TASK [Create Nginx stream config for TCP forwards (SSH and MongoDB)] ***********************************************************************************************************************************************
+2025-06-02 00:10:05,858 p=31380 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 00:10:05,884 p=31380 u=MajaBaja n=ansible INFO| TASK [Create Nginx stream config for TCP forwards (SSH and MinIO)] *************************************************************************************************************************************************
+2025-06-02 00:10:09,749 p=31380 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 00:10:09,776 p=31380 u=MajaBaja n=ansible INFO| TASK [Enable TCP forwards stream configuration] ********************************************************************************************************************************************************************
+2025-06-02 00:10:12,004 p=31380 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 00:10:12,020 p=31380 u=MajaBaja n=ansible INFO| TASK [Check UFW status] ********************************************************************************************************************************************************************************************
+2025-06-02 00:10:14,358 p=31380 u=MajaBaja n=ansible INFO| ok: [nginx_vm]
+2025-06-02 00:10:14,379 p=31380 u=MajaBaja n=ansible INFO| TASK [Allow HTTP traffic on port 80 if UFW is active] **************************************************************************************************************************************************************
+2025-06-02 00:10:14,399 p=31380 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 00:10:14,406 p=31380 u=MajaBaja n=ansible INFO| TASK [Allow HTTPS traffic on port 443 if UFW is active] ************************************************************************************************************************************************************
+2025-06-02 00:10:14,417 p=31380 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 00:10:14,422 p=31380 u=MajaBaja n=ansible INFO| TASK [Allow SSH forward traffic on port 5022 if UFW is active] *****************************************************************************************************************************************************
+2025-06-02 00:10:14,437 p=31380 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 00:10:14,445 p=31380 u=MajaBaja n=ansible INFO| TASK [Allow SSH forward traffic on port 6022 if UFW is active] *****************************************************************************************************************************************************
+2025-06-02 00:10:14,457 p=31380 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 00:10:14,466 p=31380 u=MajaBaja n=ansible INFO| TASK [Allow SSH forward traffic on port 7022 if UFW is active] *****************************************************************************************************************************************************
+2025-06-02 00:10:14,479 p=31380 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 00:10:14,483 p=31380 u=MajaBaja n=ansible INFO| TASK [Allow SSH forward traffic on port 8022 if UFW is active] *****************************************************************************************************************************************************
+2025-06-02 00:10:14,496 p=31380 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 00:10:14,501 p=31380 u=MajaBaja n=ansible INFO| TASK [Allow MariaDB forward traffic on port 3306 if UFW is active] *************************************************************************************************************************************************
+2025-06-02 00:10:14,512 p=31380 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 00:10:14,519 p=31380 u=MajaBaja n=ansible INFO| TASK [Check if a reboot is required] *******************************************************************************************************************************************************************************
+2025-06-02 00:10:16,279 p=31380 u=MajaBaja n=ansible INFO| ok: [nginx_vm]
+2025-06-02 00:10:16,306 p=31380 u=MajaBaja n=ansible INFO| TASK [Reboot the server if required] *******************************************************************************************************************************************************************************
+2025-06-02 00:10:16,327 p=31380 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 00:10:16,340 p=31380 u=MajaBaja n=ansible INFO| RUNNING HANDLER [Reload Nginx] *************************************************************************************************************************************************************************************
+2025-06-02 00:10:18,956 p=31380 u=MajaBaja n=ansible INFO| fatal: [nginx_vm]: FAILED! => {"changed": false, "msg": "Unable to reload service nginx: Job for nginx.service failed.\nSee \"systemctl status nginx.service\" and \"journalctl -xeu nginx.service\" for details.\n"}
+2025-06-02 00:10:18,959 p=31380 u=MajaBaja n=ansible INFO| PLAY RECAP *********************************************************************************************************************************************************************************************************
+2025-06-02 00:10:18,960 p=31380 u=MajaBaja n=ansible INFO| nginx_vm                   : ok=15   changed=9    unreachable=0    failed=1    skipped=9    rescued=0    ignored=0   
+2025-06-02 01:27:33,170 p=35506 u=MajaBaja n=ansible INFO| PLAY [Update Ubuntu Server and Install Nginx with Stream Proxies] **************************************************************************************************************************************************
+2025-06-02 01:27:33,184 p=35506 u=MajaBaja n=ansible INFO| TASK [Gathering Facts] *********************************************************************************************************************************************************************************************
+2025-06-02 01:27:38,004 p=35506 u=MajaBaja n=ansible WARNING| [WARNING]: Platform linux on host nginx_vm is using the discovered Python interpreter at /usr/bin/python3.12, but future installation of another Python interpreter could change the meaning of that path. See
+https://docs.ansible.com/ansible-core/2.18/reference_appendices/interpreter_discovery.html for more information.
+
+2025-06-02 01:27:38,004 p=35506 u=MajaBaja n=ansible INFO| ok: [nginx_vm]
+2025-06-02 01:27:38,017 p=35506 u=MajaBaja n=ansible INFO| TASK [Update apt repo and cache] ***********************************************************************************************************************************************************************************
+2025-06-02 01:27:59,209 p=35506 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 01:27:59,246 p=35506 u=MajaBaja n=ansible INFO| TASK [Upgrade all apt packages to the latest version] **************************************************************************************************************************************************************
+2025-06-02 01:28:02,296 p=35506 u=MajaBaja n=ansible INFO| ok: [nginx_vm]
+2025-06-02 01:28:02,319 p=35506 u=MajaBaja n=ansible INFO| TASK [Display packages that were upgraded] *************************************************************************************************************************************************************************
+2025-06-02 01:28:02,378 p=35506 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 01:28:02,385 p=35506 u=MajaBaja n=ansible INFO| TASK [Remove unused dependencies] **********************************************************************************************************************************************************************************
+2025-06-02 01:28:05,042 p=35506 u=MajaBaja n=ansible INFO| ok: [nginx_vm]
+2025-06-02 01:28:05,072 p=35506 u=MajaBaja n=ansible INFO| TASK [Install Nginx] ***********************************************************************************************************************************************************************************************
+2025-06-02 01:28:18,762 p=35506 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 01:28:18,798 p=35506 u=MajaBaja n=ansible INFO| TASK [Ensure Nginx service is started and enabled] *****************************************************************************************************************************************************************
+2025-06-02 01:28:21,870 p=35506 u=MajaBaja n=ansible INFO| ok: [nginx_vm]
+2025-06-02 01:28:21,904 p=35506 u=MajaBaja n=ansible INFO| TASK [Ensure stream block is present in nginx.conf and includes streams-enabled] ***********************************************************************************************************************************
+2025-06-02 01:28:24,000 p=35506 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 01:28:24,018 p=35506 u=MajaBaja n=ansible INFO| TASK [Create Nginx stream configuration directories] ***************************************************************************************************************************************************************
+2025-06-02 01:28:26,122 p=35506 u=MajaBaja n=ansible INFO| changed: [nginx_vm] => (item=/etc/nginx/streams-available)
+2025-06-02 01:28:28,071 p=35506 u=MajaBaja n=ansible INFO| changed: [nginx_vm] => (item=/etc/nginx/streams-enabled)
+2025-06-02 01:28:28,096 p=35506 u=MajaBaja n=ansible INFO| TASK [Create Nginx stream config for all TCP forwards] *************************************************************************************************************************************************************
+2025-06-02 01:28:32,547 p=35506 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 01:28:32,576 p=35506 u=MajaBaja n=ansible INFO| TASK [Enable TCP forwards stream configuration] ********************************************************************************************************************************************************************
+2025-06-02 01:28:34,458 p=35506 u=MajaBaja n=ansible INFO| changed: [nginx_vm]
+2025-06-02 01:28:34,483 p=35506 u=MajaBaja n=ansible INFO| TASK [Check UFW status] ********************************************************************************************************************************************************************************************
+2025-06-02 01:28:36,562 p=35506 u=MajaBaja n=ansible INFO| ok: [nginx_vm]
+2025-06-02 01:28:36,583 p=35506 u=MajaBaja n=ansible INFO| TASK [Allow HTTP traffic on port 80 if UFW is active] **************************************************************************************************************************************************************
+2025-06-02 01:28:36,607 p=35506 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 01:28:36,613 p=35506 u=MajaBaja n=ansible INFO| TASK [Allow HTTPS traffic on port 443 if UFW is active] ************************************************************************************************************************************************************
+2025-06-02 01:28:36,625 p=35506 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 01:28:36,633 p=35506 u=MajaBaja n=ansible INFO| TASK [Allow SSH forward traffic on port 5022 if UFW is active] *****************************************************************************************************************************************************
+2025-06-02 01:28:36,648 p=35506 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 01:28:36,653 p=35506 u=MajaBaja n=ansible INFO| TASK [Allow SSH forward traffic on port 6022 if UFW is active] *****************************************************************************************************************************************************
+2025-06-02 01:28:36,666 p=35506 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 01:28:36,674 p=35506 u=MajaBaja n=ansible INFO| TASK [Allow SSH forward traffic on port 7022 if UFW is active] *****************************************************************************************************************************************************
+2025-06-02 01:28:36,686 p=35506 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 01:28:36,691 p=35506 u=MajaBaja n=ansible INFO| TASK [Allow SSH forward traffic on port 8022 if UFW is active] *****************************************************************************************************************************************************
+2025-06-02 01:28:36,705 p=35506 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 01:28:36,710 p=35506 u=MajaBaja n=ansible INFO| TASK [Allow MariaDB forward traffic on port 3306 if UFW is active] *************************************************************************************************************************************************
+2025-06-02 01:28:36,721 p=35506 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 01:28:36,731 p=35506 u=MajaBaja n=ansible INFO| TASK [Check if a reboot is required] *******************************************************************************************************************************************************************************
+2025-06-02 01:28:38,662 p=35506 u=MajaBaja n=ansible INFO| ok: [nginx_vm]
+2025-06-02 01:28:38,692 p=35506 u=MajaBaja n=ansible INFO| TASK [Reboot the server if required] *******************************************************************************************************************************************************************************
+2025-06-02 01:28:38,748 p=35506 u=MajaBaja n=ansible INFO| skipping: [nginx_vm]
+2025-06-02 01:28:38,781 p=35506 u=MajaBaja n=ansible INFO| RUNNING HANDLER [Reload Nginx] *************************************************************************************************************************************************************************************
+2025-06-02 01:28:41,813 p=35506 u=MajaBaja n=ansible INFO| fatal: [nginx_vm]: FAILED! => {"changed": false, "msg": "Unable to reload service nginx: Job for nginx.service failed.\nSee \"systemctl status nginx.service\" and \"journalctl -xeu nginx.service\" for details.\n"}
+2025-06-02 01:28:41,816 p=35506 u=MajaBaja n=ansible INFO| PLAY RECAP *********************************************************************************************************************************************************************************************************
+2025-06-02 01:28:41,816 p=35506 u=MajaBaja n=ansible INFO| nginx_vm                   : ok=12   changed=6    unreachable=0    failed=1    skipped=9    rescued=0    ignored=0   

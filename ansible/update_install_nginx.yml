@@ -3,11 +3,9 @@
   hosts: nginx_server # Matchar din ändring, förutsätter att din inventory definierar denna grupp
   become: yes
   vars:
-    # Du måste se till att denna variabel (mariadb_ip) skickas till playbooken,
-    # t.ex. via --extra-vars "mariadb_ip=10.2.1.5" från ditt wrapper-skript.
-    # Om den inte är satt, kommer playbooken att misslyckas vid Nginx konfigurationssteget.
-    # Du kan sätta ett default-värde här för testning om du vill, men det är bättre att den kommer utifrån.
-    # mariadb_ip: "10.0.0.1" # Exempel på default, kommentera bort vid skarp körning
+    # Variablerna nginx_ip, mariadb_ip, wordpress_ip, mongodb_ip, minio_ip
+    # hämtas automatiskt från ansible/group_vars/all/generated_ips.yml
+    # tack vare deploy.sh-skriptet. Inga default-värden behövs här.
   handlers:
     - name: Reload Nginx
       ansible.builtin.service:
@@ -39,9 +37,9 @@
     # Nginx Installation och Grundkonfiguration
     - name: Install Nginx
       ansible.builtin.apt:
-        name: nginx
+        name: nginx-full
         state: present
-        update_cache: yes
+        update_cache: yes # Kan vara bra att ha här också ifall cachen blivit gammal sedan första uppdateringen
 
     - name: Ensure Nginx service is started and enabled
       ansible.builtin.service:
@@ -58,8 +56,8 @@
               include /etc/nginx/streams-enabled/*.conf;
           }
         marker: "# {mark} ANSIBLE MANAGED STREAM BLOCK"
-        insertafter: EOF
-        create: yes
+        insertafter: EOF # Kan också vara 'http {' om du vill ha det före eventuella http-inställningar på slutet
+        create: yes # Skapar filen om den inte finns (mindre troligt för nginx.conf)
       notify: Reload Nginx
 
     - name: Create Nginx stream configuration directories
@@ -73,50 +71,41 @@
         - /etc/nginx/streams-available
         - /etc/nginx/streams-enabled
 
-    - name: Create Nginx stream config for TCP forwards (SSH and MariaDB)
+    - name: Create Nginx stream config for all TCP forwards
       ansible.builtin.copy:
-        dest: /etc/nginx/streams-available/tcp_forwards.conf # En fil för båda forwards
+        dest: /etc/nginx/streams-available/tcp_forwards.conf
         content: |
           # SSH Forward to MariaDB VM's SSHD
           server {
-              listen 5022; # Porten Nginx lyssnar på för SSH
+              listen 5022; # Porten Nginx lyssnar på för SSH till MariaDB VM
               proxy_pass {{ mariadb_ip }}:22;
-              proxy_connect_timeout 10s;
-              proxy_timeout 1h; # Längre timeout för interaktiva SSH-sessioner
-
-    - name: Create Nginx stream config for TCP forwards (SSH and Wordpress)
-      ansible.builtin.copy:
-        dest: /etc/nginx/streams-available/tcp_forwards.conf # En fil för båda forwards
-        content: |
-          # SSH Forward to Wordpress VM's SSHD
-          server {
-              listen 6022; # Porten Nginx lyssnar på för SSH
-              proxy_pass {{ wordpress_ip }}:22;
               proxy_connect_timeout 10s;
               proxy_timeout 1h; # Längre timeout för interaktiva SSH-sessioner
           }
 
-    - name: Create Nginx stream config for TCP forwards (SSH and MongoDB)
-      ansible.builtin.copy:
-        dest: /etc/nginx/streams-available/tcp_forwards.conf # En fil för båda forwards
-        content: |
+          # SSH Forward to Wordpress VM's SSHD
+          server {
+              listen 6022; # Porten Nginx lyssnar på för SSH till Wordpress VM
+              proxy_pass {{ wordpress_ip }}:22;
+              proxy_connect_timeout 10s;
+              proxy_timeout 1h;
+          }
+
           # SSH Forward to MongoDB VM's SSHD
           server {
-              listen 7022; # Porten Nginx lyssnar på för SSH
+              listen 7022; # Porten Nginx lyssnar på för SSH till MongoDB VM
               proxy_pass {{ mongodb_ip }}:22;
               proxy_connect_timeout 10s;
-              proxy_timeout 1h; # Längre timeout för interaktiva SSH-sessioner
+              proxy_timeout 1h;
+          }
 
-    - name: Create Nginx stream config for TCP forwards (SSH and MinIO)
-      ansible.builtin.copy:
-        dest: /etc/nginx/streams-available/tcp_forwards.conf # En fil för båda forwards
-        content: |
           # SSH Forward to MinIO VM's SSHD
           server {
-              listen 8022; # Porten Nginx lyssnar på för SSH
+              listen 8022; # Porten Nginx lyssnar på för SSH till MinIO VM
               proxy_pass {{ minio_ip }}:22;
               proxy_connect_timeout 10s;
-              proxy_timeout 1h; # Längre timeout för interaktiva SSH-sessioner
+              proxy_timeout 1h;
+          }
 
           # MariaDB Forward to MariaDB VM's MariaDB service
           server {
@@ -129,7 +118,9 @@
         group: root
         mode: '0644'
       notify: Reload Nginx
-      when: mariadb_ip is defined # Kör bara om mariadb_ip är satt
+      # Villkoret "when: mariadb_ip is defined" (och liknande för andra IP:n) är inte nödvändigt här
+      # eftersom alla IP-adresser förväntas vara definierade via group_vars/all/generated_ips.yml.
+      # Om någon av dessa saknas kommer Ansible att klaga på en odefinierad variabel, vilket är önskvärt.
 
     - name: Enable TCP forwards stream configuration
       ansible.builtin.file:
@@ -139,14 +130,14 @@
         owner: root
         group: root
       notify: Reload Nginx
-      when: mariadb_ip is defined # Kör bara om mariadb_ip är satt
+      # Samma som ovan, inget 'when' behövs normalt här om alla IP:n förväntas vara satta.
 
     # Brandväggskonfiguration (UFW)
     - name: Check UFW status
       ansible.builtin.command: ufw status
       register: ufw_status_output
       changed_when: false
-      failed_when: false
+      failed_when: false # Fortsätt även om ufw inte är installerat eller kommandot misslyckas av annan anledning
 
     - name: Allow HTTP traffic on port 80 if UFW is active
       ansible.builtin.ufw:

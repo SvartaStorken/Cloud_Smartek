@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo ">>> Applying Terraform configuration..."
+echo "****************************************"
 terraform apply -auto-approve
 
 if [ $? -ne 0 ]; then
@@ -9,31 +10,34 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ">>> Fetching IP addresses from Terraform output..."
+echo "****************************************"
 NGINX_PUBLIC_IP=$(terraform output -raw nginx_vm_public_ip_address)
 MARIADB_PRIVATE_IP=$(terraform output -raw mariadb_vm_private_ip_address)
 MONGODB_PRIVATE_IP=$(terraform output -raw mongodb_vm_private_ip_address)
 WORDPRESS_PRIVATE_IP=$(terraform output -raw wordpress_vm_private_ip_address)
 MINIO_PRIVATE_IP=$(terraform output -raw minio_vm_private_ip_address)
 
+
 if [ -z "$NGINX_PUBLIC_IP" ] || [ -z "$MARIADB_PRIVATE_IP" ]; then
   echo "Failed to get IP addresses from Terraform output!"
   exit 1
 fi
 
+echo "****************************************"
 echo "Nginx Public IP: $NGINX_PUBLIC_IP"
 echo "MariaDB Private IP: $MARIADB_PRIVATE_IP"
 echo "Word press private IP: $WORDPRESS_PRIVATE_IP"
 echo "Mongodb private IP: $MONGODB_PRIVATE_IP"
 echo "MinIO private IP: $MINIO_PRIVATE_IP"
 
-echo "********************"
+echo "****************************************"
 echo ">>> SSH to Nginx_vm"
 ssh azureuser@$NGINX_PUBLIC_IP df -h
-echo "********************"
+echo "****************************************"
 ssh azureuser@$NGINX_PUBLIC_IP free
-echo "********************"
-ssh azureuser@$NGINX_PUBLIC_IP lscpu
-echo "********************"
+echo "****************************************"
+ssh azureuser@$NGINX_PUBLIC_IP lscpu | grep Model
+echo "****************************************"
 
 # Definiera sökvägen till Ansible och variabel-filen
 ANSIBLE_DIR=ansible
@@ -44,6 +48,7 @@ IP_VARS_FILE="$GROUP_VARS_ALL_DIR/generated_ips.yml"
 mkdir -p "$GROUP_VARS_ALL_DIR"
 
 echo ">>> Writing IP addresses to Ansible vars file: $IP_VARS_FILE"
+echo "****************************************"
 cat << EOF > "$IP_VARS_FILE"
 ---
 # Denna fil genereras automatiskt av deploy.sh
@@ -58,9 +63,12 @@ EOF
 
 # Navigera till Ansible-katalogen
 cd "$ANSIBLE_DIR"
-
+echo "****************************************"
 echo ">>> Running Ansible playbook..."
+echo "****************************************"
 # --extra-vars behövs inte längre, då variablerna läses från group_vars/all/generated_ips.yml
 ansible-playbook -i inventory.ini update_install_nginx.yml
 
+echo "****************************************"
 echo ">>> Deployment finished."
+echo "****************************************"
