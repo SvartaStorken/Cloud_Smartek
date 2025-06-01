@@ -1,0 +1,214 @@
+---
+- name: Update Ubuntu Server and Install Nginx with Stream Proxies
+  hosts: nginx_server # Matchar din ändring, förutsätter att din inventory definierar denna grupp
+  become: yes
+  vars:
+    # Du måste se till att denna variabel (mariadb_ip) skickas till playbooken,
+    # t.ex. via --extra-vars "mariadb_ip=10.2.1.5" från ditt wrapper-skript.
+    # Om den inte är satt, kommer playbooken att misslyckas vid Nginx konfigurationssteget.
+    # Du kan sätta ett default-värde här för testning om du vill, men det är bättre att den kommer utifrån.
+    # mariadb_ip: "10.0.0.1" # Exempel på default, kommentera bort vid skarp körning
+  handlers:
+    - name: Reload Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+
+  tasks:
+    - name: Update apt repo and cache
+      ansible.builtin.apt:
+        update_cache: yes
+        force_apt_get: yes
+        cache_valid_time: 3600
+
+    - name: Upgrade all apt packages to the latest version
+      ansible.builtin.apt:
+        upgrade: dist
+        force_apt_get: yes
+      register: apt_upgrade_result
+
+    - name: Display packages that were upgraded
+      ansible.builtin.debug:
+        var: apt_upgrade_result.stdout_lines
+      when: apt_upgrade_result.changed and apt_upgrade_result.stdout_lines is defined and apt_upgrade_result.stdout_lines
+
+    - name: Remove unused dependencies
+      ansible.builtin.apt:
+        autoremove: yes
+
+    # Nginx Installation och Grundkonfiguration
+    - name: Install Nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Ensure Nginx service is started and enabled
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    # Nginx Stream (TCP Proxy) Konfiguration
+    - name: Ensure stream block is present in nginx.conf and includes streams-enabled
+      ansible.builtin.blockinfile:
+        path: /etc/nginx/nginx.conf
+        block: |
+          stream {
+              include /etc/nginx/streams-enabled/*.conf;
+          }
+        marker: "# {mark} ANSIBLE MANAGED STREAM BLOCK"
+        insertafter: EOF
+        create: yes
+      notify: Reload Nginx
+
+    - name: Create Nginx stream configuration directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      loop:
+        - /etc/nginx/streams-available
+        - /etc/nginx/streams-enabled
+
+    - name: Create Nginx stream config for TCP forwards (SSH and MariaDB)
+      ansible.builtin.copy:
+        dest: /etc/nginx/streams-available/tcp_forwards.conf # En fil för båda forwards
+        content: |
+          # SSH Forward to MariaDB VM's SSHD
+          server {
+              listen 5022; # Porten Nginx lyssnar på för SSH
+              proxy_pass {{ mariadb_ip }}:22;
+              proxy_connect_timeout 10s;
+              proxy_timeout 1h; # Längre timeout för interaktiva SSH-sessioner
+
+    - name: Create Nginx stream config for TCP forwards (SSH and Wordpress)
+      ansible.builtin.copy:
+        dest: /etc/nginx/streams-available/tcp_forwards.conf # En fil för båda forwards
+        content: |
+          # SSH Forward to Wordpress VM's SSHD
+          server {
+              listen 6022; # Porten Nginx lyssnar på för SSH
+              proxy_pass {{ wordpress_ip }}:22;
+              proxy_connect_timeout 10s;
+              proxy_timeout 1h; # Längre timeout för interaktiva SSH-sessioner
+          }
+
+    - name: Create Nginx stream config for TCP forwards (SSH and MongoDB)
+      ansible.builtin.copy:
+        dest: /etc/nginx/streams-available/tcp_forwards.conf # En fil för båda forwards
+        content: |
+          # SSH Forward to MongoDB VM's SSHD
+          server {
+              listen 7022; # Porten Nginx lyssnar på för SSH
+              proxy_pass {{ mongodb_ip }}:22;
+              proxy_connect_timeout 10s;
+              proxy_timeout 1h; # Längre timeout för interaktiva SSH-sessioner
+
+    - name: Create Nginx stream config for TCP forwards (SSH and MinIO)
+      ansible.builtin.copy:
+        dest: /etc/nginx/streams-available/tcp_forwards.conf # En fil för båda forwards
+        content: |
+          # SSH Forward to MinIO VM's SSHD
+          server {
+              listen 8022; # Porten Nginx lyssnar på för SSH
+              proxy_pass {{ minio_ip }}:22;
+              proxy_connect_timeout 10s;
+              proxy_timeout 1h; # Längre timeout för interaktiva SSH-sessioner
+
+          # MariaDB Forward to MariaDB VM's MariaDB service
+          server {
+              listen 3306; # Porten Nginx lyssnar på för MariaDB
+              proxy_pass {{ mariadb_ip }}:3306;
+              proxy_connect_timeout 5s; # Kan vara kortare för DB-anslutningar
+              proxy_timeout 30m; # Timeout för DB-sessioner
+          }
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Reload Nginx
+      when: mariadb_ip is defined # Kör bara om mariadb_ip är satt
+
+    - name: Enable TCP forwards stream configuration
+      ansible.builtin.file:
+        src: /etc/nginx/streams-available/tcp_forwards.conf
+        dest: /etc/nginx/streams-enabled/tcp_forwards.conf
+        state: link
+        owner: root
+        group: root
+      notify: Reload Nginx
+      when: mariadb_ip is defined # Kör bara om mariadb_ip är satt
+
+    # Brandväggskonfiguration (UFW)
+    - name: Check UFW status
+      ansible.builtin.command: ufw status
+      register: ufw_status_output
+      changed_when: false
+      failed_when: false
+
+    - name: Allow HTTP traffic on port 80 if UFW is active
+      ansible.builtin.ufw:
+        rule: allow
+        port: '80'
+        proto: tcp
+      when: "'Status: active' in ufw_status_output.stdout"
+
+    - name: Allow HTTPS traffic on port 443 if UFW is active
+      ansible.builtin.ufw:
+        rule: allow
+        port: '443'
+        proto: tcp
+      when: "'Status: active' in ufw_status_output.stdout"
+
+    - name: Allow SSH forward traffic on port 5022 if UFW is active
+      ansible.builtin.ufw:
+        rule: allow
+        port: '5022'
+        proto: tcp
+      when: "'Status: active' in ufw_status_output.stdout"
+
+    - name: Allow SSH forward traffic on port 6022 if UFW is active
+      ansible.builtin.ufw:
+        rule: allow
+        port: '6022'
+        proto: tcp
+      when: "'Status: active' in ufw_status_output.stdout"
+
+    - name: Allow SSH forward traffic on port 7022 if UFW is active
+      ansible.builtin.ufw:
+        rule: allow
+        port: '7022'
+        proto: tcp
+      when: "'Status: active' in ufw_status_output.stdout"
+
+    - name: Allow SSH forward traffic on port 8022 if UFW is active
+      ansible.builtin.ufw:
+        rule: allow
+        port: '8022'
+        proto: tcp
+      when: "'Status: active' in ufw_status_output.stdout"
+
+    - name: Allow MariaDB forward traffic on port 3306 if UFW is active
+      ansible.builtin.ufw:
+        rule: allow
+        port: '3306' # Ny regel för MariaDB-porten
+        proto: tcp
+      when: "'Status: active' in ufw_status_output.stdout"
+
+    # Slut på Nginx-relaterade uppgifter
+    - name: Check if a reboot is required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required_file
+
+    - name: Reboot the server if required
+      ansible.builtin.reboot:
+        msg: "Rebooting server after updates"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: uptime
+      when: reboot_required_file.stat.exists

@@ -1,0 +1,23 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*.backup # Denna täcker terraform.tfstate.backup
+*.tfvars
+*.tfplan
+.terraform.lock.hcl # Se till att denna rad finns!
+*.tfrc
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ansible
+ansible/ansible.log # Se till att denna rad finns!
+ansible/group_vars/all/generated_ips.yml # Se till att denna rad finns!
+
+# OS specifika filer
+.DS_Store
+Thumbs.db
+
+# Eventuellt andra filer du vill ignorera
+# destroy.sh # Om du bestämmer dig för att inte ha med denna heller
